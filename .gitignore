@@ -3,9 +3,13 @@ node_modules/
 .pnp
 .pnp.js
 
+# Local package caches
+.npm-cache/
+
 # Next.js
 .next/
 out/
+*.tsbuildinfo
 
 # Environment files — NEVER commit these
 .env
@@ -22,5 +26,12 @@ prisma/migrations/
 *.pem
 npm-debug.log*
 .vercel
+
+# Local workspace/editor
+.vscode/
+
+# Local portable tooling
+.tools/
+.tmp/
 
 .vercel
