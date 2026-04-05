@@ -1,0 +1,85 @@
+Veloce Project Run Guide
+
+1. What this project is
+Veloce is a Next.js web app for collecting project briefs, analyzing them with AI, and managing them in a dashboard.
+
+Main parts:
+- Public intake form for submitting new project briefs
+- AI analysis pipeline that estimates effort, complexity, and stack
+- Dashboard with Kanban-style stages
+- Brief detail pages for notes, assignment, and timeline
+- Analytics page for reporting and pipeline insights
+
+2. Requirements
+- Windows with Node.js installed
+- PostgreSQL database connection string
+- Groq API key for AI analysis
+- Redis URL and token if you want analytics caching and rate limiting features to work fully
+- Auth secret for NextAuth
+
+3. Important Windows note
+On this machine, use npm.cmd instead of npm or npx.ps1 when running commands in PowerShell.
+If you already have the portable Node.js folder in the D drive workspace, prefer that path so the C drive is not used unnecessarily.
+
+4. Environment setup
+Create a file named .env.local in the project root and add the needed values.
+At minimum, you should set:
+- DATABASE_URL
+- AUTH_SECRET
+- NEXTAUTH_URL
+- GROQ_API_KEY
+- UPSTASH_REDIS_REST_URL
+- UPSTASH_REDIS_REST_TOKEN
+
+5. Install dependencies
+Run:
+- npm.cmd install
+
+6. Generate Prisma client
+Run:
+- npx prisma generate
+
+7. Sync the database schema
+Run:
+- npx prisma db push
+
+8. Seed the database
+Run:
+- npm run seed
+
+This creates demo users and sample briefs.
+
+Demo credentials after seeding:
+- Admin: admin@veloce.io / admin123
+- Reviewer: reviewer@veloce.io / reviewer123
+
+9. Start the app in development
+Run:
+- npm run dev
+
+Then open:
+- http://localhost:3000
+
+10. How to use the app
+- Open the home page to submit a new project brief
+- Log in with one of the seeded demo accounts
+- Review briefs from the dashboard pipeline
+- Open a brief to view analysis, notes, assignment, and timeline
+- Check the analytics page for summaries and charts
+
+11. Production build
+If you want to test the production build locally, run:
+- npm run build
+- npm run start
+
+12. Troubleshooting
+- If npm scripts fail in PowerShell, use npm.cmd directly.
+- If Prisma fails, confirm DATABASE_URL is valid and reachable.
+- If AI analysis does not run, confirm GROQ_API_KEY is present.
+- If login fails, reseed the database after confirming env variables.
+
+13. Short project summary
+This app is designed to help an agency or internal team collect requirements, estimate work, assign briefs, and track progress in one place.
+
+
+& "D:\projects\veloce\.tools\node\node-v24.14.1-win-x64\npm.cmd"

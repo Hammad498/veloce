@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Stage {
+  NEW
+  UNDER_REVIEW
+  PROPOSAL_SENT
+  WON
+  ARCHIVED
+}
+
+enum Category {
+  WEB_APP
+  MOBILE
+  AI_ML
+  AUTOMATION
+  INTEGRATION
+}
+
+enum Role {
+  ADMIN
+  REVIEWER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  role          Role      @default(REVIEWER)
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  assignedBriefs Brief[]
+  notes         Note[]
+  stageEvents   StageEvent[]
+  assignmentEvents AssignmentEvent[] @relation("AssignmentActor")
+  assignmentFromEvents AssignmentEvent[] @relation("AssignmentFrom")
+  assignmentToEvents AssignmentEvent[] @relation("AssignmentTo")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Brief {
+  id          String      @id @default(cuid())
+  title       String
+  description String      @db.Text
+  budgetRange String
+  urgency     String
+  contactName String
+  contactEmail String
+  stage       Stage       @default(NEW)
+  assigneeId  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  assignee    User?       @relation(fields: [assigneeId], references: [id])
+  analysis    AiAnalysis?
+  events      StageEvent[]
+  notes       Note[]
+  assignmentEvents AssignmentEvent[]
+
+  @@index([stage, createdAt(sort: Desc)])
+  @@index([assigneeId, stage])
+  @@index([createdAt(sort: Desc)])
+}
+
+model AssignmentEvent {
+  id             String   @id @default(cuid())
+  briefId         String
+  brief           Brief    @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  fromAssigneeId  String?
+  fromAssignee    User?    @relation("AssignmentFrom", fields: [fromAssigneeId], references: [id])
+  toAssigneeId    String?
+  toAssignee      User?    @relation("AssignmentTo", fields: [toAssigneeId], references: [id])
+  actorId         String
+  actor           User     @relation("AssignmentActor", fields: [actorId], references: [id])
+  createdAt       DateTime @default(now())
+
+  @@index([briefId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+}
+
+model AiAnalysis {
+  id          String    @id @default(cuid())
+  briefId     String    @unique
+  brief       Brief     @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  features    Json
+  category    Category
+  minHours    Int
+  maxHours    Int
+  stack       Json
+  complexity  Int
+  status      String    @default("ok")
+  overriddenBy String?
+  overrideReason String? @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([briefId])
+  @@index([category])
+  @@index([complexity])
+}
+
+model StageEvent {
+  id        String   @id @default(cuid())
+  briefId   String
+  brief     Brief    @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  fromStage Stage
+  toStage   Stage
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([briefId, createdAt(sort: Desc)])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  briefId   String
+  brief     Brief    @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String   @db.Text
+  parentId  String?
+  parent    Note?    @relation("NoteReplies", fields: [parentId], references: [id])
+  replies   Note[]   @relation("NoteReplies")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([briefId, createdAt(sort: Desc)])
+}
