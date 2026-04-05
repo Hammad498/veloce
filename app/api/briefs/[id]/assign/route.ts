@@ -23,21 +23,26 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const [brief] = await prisma.$transaction([
-    prisma.brief.update({
-      where: { id },
-      data: { assigneeId: parsed.data.assigneeId },
-      include: { assignee: { select: { id: true, name: true, email: true } } },
-    }),
-    prisma.assignmentEvent.create({
+  const tableCheck = await prisma.$queryRaw<Array<{ exists: boolean }>>`
+    SELECT to_regclass('public."AssignmentEvent"') IS NOT NULL AS "exists"
+  `;
+
+  const brief = await prisma.brief.update({
+    where: { id },
+    data: { assigneeId: parsed.data.assigneeId },
+    include: { assignee: { select: { id: true, name: true, email: true } } },
+  });
+
+  if (tableCheck[0]?.exists) {
+    await prisma.assignmentEvent.create({
       data: {
         briefId: id,
         fromAssigneeId: current.assigneeId,
         toAssigneeId: parsed.data.assigneeId,
         actorId: session.user.id!,
       },
-    }),
-  ]);
+    });
+  }
 
   return NextResponse.json(brief);
 }
