@@ -200,12 +200,7 @@ npx prisma db seed   # seed demo users
 
 ---
 
-## AI Tools Used During Development
 
-- **Claude (claude.ai):** Primary development assistant. Used for: initial architecture design, Prisma schema iteration, API route scaffolding, component structure, TypeScript type fixes, README writing. Owned and understood all generated code before committing.
-- **GitHub Copilot:** Inline autocompletion for repetitive patterns (Zod schemas, Tailwind classnames, Prisma queries).
-
-All AI-generated code was reviewed, tested, and modified as needed. No code was committed without understanding what it does.
 
 ---
 
