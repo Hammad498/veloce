@@ -28,14 +28,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         },
         orderBy: { createdAt: "desc" },
       },
-      assignmentEvents: {
-        include: {
-          actor: { select: { id: true, name: true, email: true } },
-          fromAssignee: { select: { id: true, name: true, email: true } },
-          toAssignee: { select: { id: true, name: true, email: true } },
-        },
-        orderBy: { createdAt: "asc" },
-      },
     },
   });
 
@@ -47,5 +39,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  return NextResponse.json(brief);
+  let assignmentEvents: unknown[] = [];
+
+  try {
+    const tableCheck = await prisma.$queryRaw<Array<{ exists: boolean }>>`
+      SELECT to_regclass('public."AssignmentEvent"') IS NOT NULL AS "exists"
+    `;
+    if (tableCheck[0]?.exists) {
+      assignmentEvents = await prisma.assignmentEvent.findMany({
+        where: { briefId: id },
+        include: {
+          actor: { select: { id: true, name: true, email: true } },
+          fromAssignee: { select: { id: true, name: true, email: true } },
+          toAssignee: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+    }
+  } catch {
+    assignmentEvents = [];
+  }
+
+  return NextResponse.json({ ...brief, assignmentEvents });
 }
