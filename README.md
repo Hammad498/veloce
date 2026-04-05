@@ -2,7 +2,7 @@
 
 A production-grade agency tool that receives project briefs, runs them through an AI analysis pipeline, and manages the full proposal lifecycle via a real-time Kanban dashboard.
 
-**Live Demo:** `https://your-deployment.vercel.app`  
+**Live Demo:** `https://veloce-tawny.vercel.app/`  
 **Tech Stack:** Next.js 14+ App Router · PostgreSQL (Neon) · Prisma · Upstash Redis · Groq (Llama 3.1) · NextAuth · Recharts
 
 ---
