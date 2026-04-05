@@ -215,6 +215,8 @@ function OverrideModal({ analysis, briefId, onClose, onSave }: {
 function AssignDropdown({ brief, onAssigned }: { brief: Brief; onAssigned: () => void }) {
   const [open, setOpen] = useState(false);
   const [team, setTeam] = useState<TeamMember[]>([]);
+  const [loadingTeam, setLoadingTeam] = useState(false);
+  const [error, setError] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -240,24 +242,45 @@ function AssignDropdown({ brief, onAssigned }: { brief: Brief; onAssigned: () =>
   }, [open]);
 
   const loadTeam = async () => {
-    const res = await fetch("/api/users");
-    if (res.ok) setTeam(await res.json());
+    setLoadingTeam(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/users");
+      if (res.ok) {
+        setTeam(await res.json());
+      } else {
+        const payload = await res.json().catch(() => null);
+        setError(payload?.error ?? "Unable to load assignees");
+      }
+    } finally {
+      setLoadingTeam(false);
+    }
   };
 
   const assign = async (userId: string | null) => {
-    await fetch(`/api/briefs/${brief.id}/assign`, {
+    setError("");
+
+    const res = await fetch(`/api/briefs/${brief.id}/assign`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ assigneeId: userId }),
     });
-    setOpen(false);
-    onAssigned();
+
+    if (res.ok) {
+      setOpen(false);
+      onAssigned();
+      return;
+    }
+
+    const payload = await res.json().catch(() => null);
+    setError(payload?.error ?? "Unable to update assignment");
   };
 
   return (
     <div ref={containerRef} className="relative">
       <button
-        onClick={() => { setOpen(o => !o); if (!open) loadTeam(); }}
+        onClick={() => { setOpen(o => !o); if (!open) void loadTeam(); }}
         className="flex items-center gap-1.5 text-xs text-text-muted hover:text-accent-green border border-slate-700 hover:border-accent-green/50 px-3 py-1.5 rounded-lg transition-colors">
         <UserPlus className="w-3 h-3" />
         {brief.assignee ? "Reassign" : "Assign"}
@@ -265,15 +288,25 @@ function AssignDropdown({ brief, onAssigned }: { brief: Brief; onAssigned: () =>
       {open && (
         <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-900/95 backdrop-blur-xl border border-slate-600/70 rounded-xl shadow-2xl z-50 py-1.5 overflow-hidden max-h-72 overflow-y-auto">
           <div className="px-3 py-2 text-xs text-slate-300 font-semibold tracking-wide border-b border-slate-700">Assign to</div>
+          {error && (
+            <div className="px-3 py-2 text-xs text-red-300 border-b border-slate-700/80 bg-red-500/10">
+              {error}
+            </div>
+          )}
           {brief.assignee && (
             <button onClick={() => assign(null)}
               className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-slate-800/70 transition-colors flex items-center gap-2">
               <X className="w-3 h-3" /> Unassign
             </button>
           )}
-          {team.length === 0 && (
+          {loadingTeam && (
             <div className="px-3 py-3 text-xs text-slate-300 text-center">
               <Loader2 className="w-3 h-3 animate-spin mx-auto" />
+            </div>
+          )}
+          {!loadingTeam && team.length === 0 && !error && (
+            <div className="px-3 py-3 text-xs text-slate-400 text-center">
+              No assignable users found.
             </div>
           )}
           {team.map(member => (

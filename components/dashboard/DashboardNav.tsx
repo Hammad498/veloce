@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { LayoutDashboard, BarChart2, Zap, LogOut, User, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,33 @@ const links = [
 
 export default function DashboardNav({ user }: Props) {
   const path = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      const csrfResponse = await fetch("/api/auth/csrf", {
+        credentials: "same-origin",
+      });
+      const { csrfToken } = (await csrfResponse.json()) as { csrfToken?: string };
+
+      if (csrfToken) {
+        await fetch("/api/auth/signout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            csrfToken,
+            callbackUrl: "/login",
+          }),
+          credentials: "same-origin",
+        });
+      }
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
+  };
 
   return (
     <aside className="w-60 bg-gradient-to-b from-slate-900 to-slate-950 glass-panel-dark flex flex-col shrink-0 h-screen sticky top-0 border-r border-accent-green/10 rounded-0">
@@ -67,7 +94,7 @@ export default function DashboardNav({ user }: Props) {
         </div>
 
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={handleSignOut}
           className="w-full flex items-center gap-3 px-4 py-3 text-text-secondary hover:text-accent-green hover:bg-accent-green/10 rounded-lg transition-all duration-300 border border-transparent hover:border-accent-green/30 text-sm font-medium"
         >
           <LogOut className="w-5 h-5" />

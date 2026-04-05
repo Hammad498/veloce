@@ -36,6 +36,9 @@ DATABASE_URL="postgresql://user:pass@host/veloce?sslmode=require"
 AUTH_SECRET="your-32-char-secret"
 NEXTAUTH_URL="https://your-domain.vercel.app"
 
+# Keep this pointed at the deployed production URL in Vercel.
+# Leaving it set to localhost will make auth redirects and sign-out land on localhost in production.
+
 # Upstash Redis (upstash.com — free tier)
 UPSTASH_REDIS_REST_URL="https://your-redis.upstash.io"
 UPSTASH_REDIS_REST_TOKEN="your-token"
