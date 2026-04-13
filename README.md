@@ -1,4 +1,4 @@
-# Veloce — AI-Powered Project Intake & Estimation Engine.....
+# Veloce — AI-Powered Project Intake & Estimation Engine.
 
 A production-grade agency tool that receives project briefs, runs them through an AI analysis pipeline, and manages the full proposal lifecycle via a real-time Kanban dashboard.
 
